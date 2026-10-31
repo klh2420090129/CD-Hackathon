@@ -1,0 +1,2 @@
+# Optional test runner dependency
+pytest>=8.0.0
