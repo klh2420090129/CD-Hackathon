@@ -4,7 +4,7 @@ import sys
 from typing import Dict, Any
 from compiler.lexer import Lexer, LexerError
 from compiler.parser import Parser, ParserError
-from compiler.sdt import SDTAnnotator
+from compiler.sdt import SDTAnnotator, SemanticError
 from compiler.postfix import PostfixGenerator
 from compiler.tac import TACGenerator
 
@@ -22,7 +22,7 @@ def compile_source(source_code: str) -> Dict[str, Any]:
         parser = Parser(tokens)
         ast = parser.parse()
 
-        # Stage 3: Syntax-Directed Translation
+        # Stage 3: Syntax-Directed Translation & Semantic Validation
         sdt = SDTAnnotator(ast) if ast else None
         annotated_ast = sdt.annotate() if sdt else None
 
@@ -40,10 +40,13 @@ def compile_source(source_code: str) -> Dict[str, Any]:
             "ast": annotated_ast.to_dict() if annotated_ast else None,
             "postfix": postfix_expressions,
             "tac": [str(instr) for instr in tac_instructions],
+            "tac_quadruples": [instr.to_dict() for instr in tac_instructions],
             "sdt_trace": sdt.evaluation_trace if sdt else [],
+            "backpatch_trace": tac_gen.backpatcher.events if tac_gen else [],
+            "symbol_table": sdt.symbol_table if sdt else {},
             "error": None
         }
-    except (LexerError, ParserError) as err:
+    except (LexerError, ParserError, SemanticError) as err:
         return {
             "success": False,
             "error": {
@@ -75,9 +78,13 @@ def main():
         code = f.read()
 
     result = compile_source(code)
-    print("Compilation Result:", result)
+    if result["success"]:
+        print("--- Three-Address Code ---")
+        for line in result["tac"]:
+            print(line)
+    else:
+        print("Compilation Failed:", result["error"])
 
 
 if __name__ == "__main__":
     main()
-
