@@ -6,24 +6,24 @@
 
 ## 1. Project Overview & Objectives
 
-**ThreeAddrGen** is an educational, interactive compiler laboratory that translates a restricted C-like source language into Three-Address Code (TAC). 
+**ThreeAddrGen** is a complete, educational, and interactive compiler laboratory that translates a restricted C-like source language into Three-Address Code (TAC).
 
-Key project capabilities:
-- **Restricted C-like Language Support:** Type declarations (`int`, `float`), arithmetic assignments, nested expressions with parentheses, relational checks, `if-else` conditionals, `while` loops, and short-circuit Boolean expressions (`&&`, `||`, `!`).
-- **Abstract Syntax Tree (AST):** Visual hierarchy displaying expression and statement relationships.
-- **Syntax-Directed Translation (SDT):** Real translation attributing synthesized attributes ($E.addr$, $E.type$) and inherited attributes ($S.next$, $B.true$, $B.false$).
+### Key Compiler Features
+- **Restricted C-like Language Support:** Type declarations (`int`, `float`), arithmetic assignments, nested expressions with parentheses, relational checks (`<`, `<=`, `>`, `>=`, `==`, `!=`), `if-else` conditionals, `while` loops, and short-circuit Boolean expressions (`&&`, `||`, `!`).
+- **Abstract Syntax Tree (AST):** Visual expandable/collapsible tree displaying expression and statement relationships.
+- **Syntax-Directed Translation (SDT):** Real translation attributing synthesized attributes ($E.addr$, $E.type$, $E.code$) and inherited attributes ($S.\text{target\_type}$, $\text{scope\_level}$).
 - **Postfix Notation:** Operator precedence handling and step-by-step conversion for arithmetic expressions.
-- **Three-Address Code Generation:** Quadruple emission with temporary variable allocation ($t_1, t_2, \dots$) and label generation ($L_1, L_2, \dots$).
-- **Boolean Translation & Backpatching:** Short-circuit flow using `makelist`, `merge`, and `backpatch` algorithms.
-- **Compiler Lab Web Interface:** Modern, clean, browser-based interface built with vanilla HTML/CSS/JavaScript and Python's standard library.
+- **Three-Address Code Generation:** Quadruple emission with temporary variable allocation ($t_1, t_2, \dots$) and zero-based contiguous instruction numbering.
+- **Boolean Translation & Backpatching:** Short-circuit control flow using textbook `makelist`, `merge`, and `backpatch` algorithms.
+- **Compiler Lab Web Interface:** Modern, clean, browser-based developer laboratory built with vanilla HTML5/CSS/JavaScript and Python's standard library.
 
 ---
 
 ## 2. Technology Stack
 
 - **Backend & Compiler Logic:** Python 3.12 (Pure Standard Library: `http.server`, `json`, `dataclasses`, `urllib`).
-- **Frontend:** Vanilla HTML5, CSS3, JavaScript (no node_modules or heavy external frameworks).
-- **Testing:** Python `unittest` / `pytest`.
+- **Frontend:** Vanilla HTML5, CSS3, JavaScript (zero external node dependencies).
+- **Testing:** Python `pytest` and `unittest`.
 - **Version Control:** Git on branch `hackathon/threeaddrgen`.
 
 ---
@@ -35,21 +35,28 @@ CD-Hackathon/
 ├── compiler/
 │   ├── __init__.py         # Package initialization
 │   ├── lexer.py            # Tokenizer with line & column tracking
-│   ├── ast_nodes.py        # Typed AST node structures
+│   ├── ast_nodes.py        # Typed AST node structures with .to_dict()
 │   ├── parser.py           # Recursive-descent parser
 │   ├── sdt.py              # SDT engine (Synthesized & Inherited attributes)
 │   ├── postfix.py          # Postfix notation emitter
-│   ├── tac.py              # TAC instruction model & code generation
+│   ├── tac.py              # Quadruple model & TAC code generation
 │   ├── backpatch.py        # Backpatching list operations (makelist, merge, backpatch)
-│   └── driver.py           # Unified compiler entry point
+│   └── driver.py           # Unified compilation pipeline
 ├── web/
-│   ├── server.py           # Python HTTP server & /api/compile endpoint
+│   ├── server.py           # Python HTTP server & /api/compile, /api/samples
 │   └── static/
 │       ├── index.html      # Compiler laboratory UI
 │       ├── style.css       # Clean IDE theme & styling
-│       └── app.js          # Interactive frontend logic & tab switching
+│       └── app.js          # Interactive frontend logic & visualizers
 ├── tests/
-│   └── __init__.py         # Test package initialization
+│   ├── __init__.py
+│   ├── test_lexer.py       # Lexer unit tests
+│   ├── test_parser.py      # Parser and AST tests
+│   ├── test_postfix.py     # Postfix generation tests
+│   ├── test_sdt.py         # SDT and type checking tests
+│   ├── test_tac.py         # TAC generation and control flow tests
+│   ├── test_backpatch.py   # Backpatching primitive tests
+│   └── test_regression.py  # Nested control flow and API regression tests
 ├── samples/
 │   ├── 01_arithmetic.c              # Basic arithmetic expressions
 │   ├── 02_if_else.c                 # If-Else control flow
@@ -61,7 +68,7 @@ CD-Hackathon/
 
 ---
 
-## 4. Planned Compilation Pipeline
+## 4. Compilation Pipeline
 
 ```
 Source Code (.c)
@@ -82,43 +89,35 @@ Source Code (.c)
 
 ---
 
-## 5. Installation & Setup
+## 5. Overview of UI Output Panels
 
-1. **Prerequisites:**
-   - Python 3.10+ installed.
-   - Modern web browser (Chrome, Edge, Firefox).
-
-2. **Clone & Switch to Branch:**
-   ```bash
-   git clone https://github.com/klh2420090129/CD-Hackathon.git
-   cd CD-Hackathon
-   git checkout hackathon/threeaddrgen
-   ```
-
-3. **Install Optional Test Runner:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+1. **Three-Address Code:** Color-coded list of generated instructions (`Assignment`, `Arithmetic`, `Conditional Jump`, `Unconditional Jump`, `Halt`).
+2. **AST Tree:** Interactive, expandable/collapsible tree showing syntax nodes, operators, and statement hierarchy.
+3. **Postfix:** Contextual table displaying arithmetic expressions in Reverse Polish Notation.
+4. **SDT Attributes:** Step-by-step trace showing each attribute evaluation event, attribute name, direction (`synthesized` vs `inherited`), and computed value.
+5. **Symbol Table:** Variable registry displaying declared identifiers, datatypes, and scope.
+6. **Backpatching:** Chronological log of `makelist`, `merge`, and `backpatch` operations with targets and explanations.
+7. **Tokens:** Table of all scanned lexical tokens with lexemes, line numbers, and column offsets.
 
 ---
 
-## 6. How to Run
+## 6. How to Run the Application & Tests
 
-### A. Run via Command Line Compiler
-To compile any source file directly to TAC via CLI:
+### A. Launch Interactive Compiler Laboratory (Browser)
+```bash
+python web/server.py 8000
+```
+Open **[http://localhost:8000](http://localhost:8000)** in any modern web browser.
+
+### B. Run via Command Line Compiler
 ```bash
 python -m compiler.driver samples/01_arithmetic.c
 ```
 
-### B. Launch the Interactive Web Laboratory
+### C. Run All Test Suites
 ```bash
-python web/server.py 8000
-```
-Open [http://localhost:8000](http://localhost:8000) in your web browser.
-
-### C. Run Test Suite
-```bash
-python -m unittest discover tests
-# or with pytest
 pytest tests/ -v
+# or
+python -m unittest discover tests
 ```
+All 57 unit and regression tests will execute.

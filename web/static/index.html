@@ -3,61 +3,135 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ThreeAddrGen — Compiler Design Laboratory</title>
+  <title>ThreeAddrGen — Compiler Design Laboratory (PS-06)</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="app-header">
     <div class="header-left">
-      <h1>ThreeAddrGen</h1>
+      <div class="logo-mark">3A</div>
+      <div class="title-group">
+        <h1>ThreeAddrGen</h1>
+        <span class="subtitle">Source to Three-Address Code Translator</span>
+      </div>
       <span class="badge">PS-06</span>
-      <span class="subtitle">Source to Three-Address Code Translator</span>
     </div>
-    <div class="header-right">
-      <label for="sample-select">Load Preset:</label>
-      <select id="sample-select">
-        <option value="">-- Choose Sample --</option>
-      </select>
-      <button id="btn-compile" class="btn-primary">Compile & Generate TAC</button>
+
+    <div class="header-actions">
+      <div class="sample-control">
+        <label for="sample-select">Preset:</label>
+        <select id="sample-select">
+          <option value="">Loading samples...</option>
+        </select>
+      </div>
+
+      <button id="btn-clear" class="btn btn-secondary" title="Clear Editor">Clear</button>
+      <button id="btn-compile" class="btn btn-primary" title="Compile & Generate TAC">
+        <span class="btn-spinner hidden" id="compile-spinner"></span>
+        <span class="btn-text" id="compile-btn-text">Compile Program</span>
+      </button>
     </div>
   </header>
 
   <main class="app-body">
+    <!-- Left Pane: Editor -->
     <section class="pane pane-editor">
       <div class="pane-header">
-        <h2>Source Code (Restricted C-like)</h2>
-        <span id="line-info" class="meta-info">Line 1, Col 1</span>
+        <div class="pane-title">
+          <span class="dot dot-editor"></span>
+          <h2>Source Code (Restricted C-like)</h2>
+        </div>
+        <div class="editor-meta">
+          <span id="line-info" class="meta-info">Line 1, Col 1</span>
+        </div>
       </div>
-      <div class="editor-container">
-        <textarea id="source-editor" spellcheck="false" placeholder="Enter C-like source code here..."></textarea>
+
+      <div class="editor-wrapper">
+        <div class="line-numbers" id="line-numbers">1</div>
+        <textarea id="source-editor" spellcheck="false" placeholder="// Enter restricted C-like code or select a preset above..."></textarea>
       </div>
-      <div id="error-bar" class="error-bar hidden"></div>
+
+      <div id="error-bar" class="status-bar status-error hidden">
+        <span class="status-icon">⚠</span>
+        <div class="status-msg" id="error-message">Error details...</div>
+      </div>
+      <div id="success-bar" class="status-bar status-success hidden">
+        <span class="status-icon">✓</span>
+        <div class="status-msg" id="success-message">Compilation successful!</div>
+      </div>
     </section>
 
+    <!-- Right Pane: Compiler Pipeline Inspector -->
     <section class="pane pane-results">
-      <div class="tabs">
+      <div class="tabs-header">
         <button class="tab-btn active" data-tab="tab-tac">Three-Address Code</button>
         <button class="tab-btn" data-tab="tab-ast">AST Tree</button>
+        <button class="tab-btn" data-tab="tab-postfix">Postfix</button>
         <button class="tab-btn" data-tab="tab-sdt">SDT Attributes</button>
-        <button class="tab-btn" data-tab="tab-postfix">Postfix Notation</button>
-        <button class="tab-btn" data-tab="tab-tokens">Token Stream</button>
+        <button class="tab-btn" data-tab="tab-symbols">Symbol Table</button>
+        <button class="tab-btn" data-tab="tab-backpatch">Backpatching</button>
+        <button class="tab-btn" data-tab="tab-tokens">Tokens</button>
       </div>
 
       <div class="tab-content">
+        <!-- Tab 1: TAC View -->
         <div id="tab-tac" class="tab-pane active">
-          <pre id="output-tac" class="code-output">// Generated Three-Address Code will appear here</pre>
+          <div class="tac-legend">
+            <span class="legend-chip chip-assign">Assignment</span>
+            <span class="legend-chip chip-arith">Arithmetic</span>
+            <span class="legend-chip chip-cond">Conditional Jump</span>
+            <span class="legend-chip chip-uncond">Unconditional Jump</span>
+            <span class="legend-chip chip-halt">Halt</span>
+          </div>
+          <div id="output-tac" class="tac-instruction-list">
+            <div class="empty-state">No TAC instructions generated yet. Click "Compile Program".</div>
+          </div>
         </div>
+
+        <!-- Tab 2: AST Tree View -->
         <div id="tab-ast" class="tab-pane">
-          <div id="output-ast" class="tree-output">AST visualization pending compilation...</div>
+          <div class="tree-controls">
+            <button id="btn-ast-expand" class="btn-micro">Expand All</button>
+            <button id="btn-ast-collapse" class="btn-micro">Collapse All</button>
+          </div>
+          <div id="output-ast" class="ast-tree-view">
+            <div class="empty-state">No AST available. Click "Compile Program".</div>
+          </div>
         </div>
-        <div id="tab-sdt" class="tab-pane">
-          <div id="output-sdt" class="sdt-output">SDT evaluation log will appear here...</div>
-        </div>
+
+        <!-- Tab 3: Postfix View -->
         <div id="tab-postfix" class="tab-pane">
-          <div id="output-postfix" class="postfix-output">Postfix translation will appear here...</div>
+          <div id="output-postfix" class="table-container">
+            <div class="empty-state">No postfix expressions generated yet.</div>
+          </div>
         </div>
+
+        <!-- Tab 4: SDT Attributes View -->
+        <div id="tab-sdt" class="tab-pane">
+          <div id="output-sdt" class="table-container">
+            <div class="empty-state">No SDT attribute trace available yet.</div>
+          </div>
+        </div>
+
+        <!-- Tab 5: Symbol Table View -->
+        <div id="tab-symbols" class="tab-pane">
+          <div id="output-symbols" class="table-container">
+            <div class="empty-state">No symbols registered yet.</div>
+          </div>
+        </div>
+
+        <!-- Tab 6: Backpatching Trace View -->
+        <div id="tab-backpatch" class="tab-pane">
+          <div id="output-backpatch" class="table-container">
+            <div class="empty-state">No backpatching operations performed yet.</div>
+          </div>
+        </div>
+
+        <!-- Tab 7: Token Stream View -->
         <div id="tab-tokens" class="tab-pane">
-          <div id="output-tokens" class="tokens-output">Tokens will appear here...</div>
+          <div id="output-tokens" class="table-container">
+            <div class="empty-state">No tokens scanned yet.</div>
+          </div>
         </div>
       </div>
     </section>
@@ -66,4 +140,3 @@
   <script src="app.js"></script>
 </body>
 </html>
-
